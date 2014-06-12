@@ -1,33 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jms="http://www.springframework.org/schema/jms"
+	xmlns:amq="http://activemq.apache.org/schema/core"
 	xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-			http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd">
+			http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd
+			http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.2.0.xsd">
 
-	<!-- JMS connection factory for ActiveMQ -->
-	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"
-		p:brokerURL="tcp://localhost:61616" />
-	 
-	<!-- Caching connection factory -->
-	<bean id="cachingConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
-		<constructor-arg ref="connectionFactory" />
-	</bean>
- 
-	<!-- Default destination queue -->
-	<bean id="destination" class="org.apache.activemq.command.ActiveMQQueue">
-		<constructor-arg index="0" value="MyQueue"/>
-	</bean>
- 
-	<!-- JmsTemplate -->
+	<!-- ActiveMQ Broker -->
+	<amq:broker useJmx="false" persistent="false">
+		<amq:transportConnectors>
+			<amq:transportConnector uri="tcp://localhost:0" />
+		</amq:transportConnectors>
+	</amq:broker>
+
+	<!-- Destination queue -->
+	<amq:queue id="destination" physicalName="org.apache.activemq.destination.queue" />
+
+	<!-- JMS ConnectionFactory -->
+	<amq:connectionFactory id="jmsFactory" brokerURL="vm://localhost" />
+	
+	<bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">  
+      <property name="targetConnectionFactory" ref="jmsFactory" />  
+    </bean> 
+    
+    <!-- JmsTemplate -->
 	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-		<property name="connectionFactory" ref="cachingConnectionFactory" />
+		<property name="connectionFactory" ref="connectionFactory" />
 		<property name="defaultDestination" ref="destination" />
 	</bean>
- 
+
 	<!-- Message sender -->
-	<bean id="messageSender" class="com.city81.jms.MessageSender">
-		<constructor-arg index="0" ref="jmsTemplate" />
+	<bean id="messageSender" class="com.toni.messaging.MessageSender">
+		<constructor-arg ref="jmsTemplate" />
 	</bean>
+	
+	<!-- JMS connection factory for ActiveMQ 
+		<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"
+			p:brokerURL="tcp://localhost:61616" />
+	-->
+	<!-- Caching connection factory 
+	<bean id="cachingConnectionFactory"
+		class="org.springframework.jms.connection.CachingConnectionFactory">
+		<constructor-arg ref="connectionFactory" />
+	</bean>
+	-->
 
 </beans>
