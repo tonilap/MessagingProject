@@ -78,7 +78,7 @@
 			<version>${spring.version}</version>
 		</dependency>
 
-		<!--  -->
+		
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-spring</artifactId>
